@@ -1,10 +1,13 @@
 from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from jsonschema import ValidationError, validate
+from pydantic import BaseModel, Field
 import json
-from . import db
-from jsonschema import validate, ValidationError
+
+from . import ai, db
 from . import ai
 
 APP_DIR = Path(__file__).resolve().parent.parent
@@ -16,6 +19,17 @@ app = FastAPI()
 
 class BoardPayload(BaseModel):
     data: dict
+
+
+class AIChatMessage(BaseModel):
+    role: str
+    content: str
+
+
+class AIBoardRequest(BaseModel):
+    question: str = Field(..., min_length=1)
+    board: Dict[str, Any]
+    conversation_history: List[AIChatMessage] = Field(default_factory=list)
 
 
 @app.on_event("startup")
@@ -82,6 +96,21 @@ def ai_test(body: AIPrompt):
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
     return {"status": "ok", "response": out}
+
+
+@app.post("/api/ai/board")
+def ai_board(payload: AIBoardRequest):
+    """Ask the AI to answer a board-related question and optionally update the board."""
+    try:
+        result = ai.call_board_ai(
+            board=payload.board,
+            question=payload.question,
+            history=[msg.model_dump() for msg in payload.conversation_history],
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+    return {"status": "ok", "result": result}
 
 
 # Serve static export if present

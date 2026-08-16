@@ -5,6 +5,7 @@ from pydantic import BaseModel
 import json
 from . import db
 from jsonschema import validate, ValidationError
+from . import ai
 
 APP_DIR = Path(__file__).resolve().parent.parent
 DB_PATH = APP_DIR / "data" / "pm.db"
@@ -66,6 +67,21 @@ def put_board(payload: dict):
         raise HTTPException(status_code=400, detail=str(exc))
     db.save_board(DB_PATH, user_id, payload)
     return {"status": "ok"}
+
+
+
+class AIPrompt(BaseModel):
+    prompt: str
+
+
+@app.post("/api/ai-test")
+def ai_test(body: AIPrompt):
+    """Simple AI test endpoint. Sends the prompt to OpenRouter and returns the text."""
+    try:
+        out = ai.call_openrouter(body.prompt, max_tokens=100)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+    return {"status": "ok", "response": out}
 
 
 # Serve static export if present

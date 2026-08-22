@@ -86,8 +86,8 @@ def call_openrouter(
     system_prompt: Optional[str] = None,
 ) -> str:
     api_key = os.getenv("OPENROUTER_API_KEY")
-    if not api_key:
-        raise RuntimeError("OPENROUTER_API_KEY not set in environment")
+    if not api_key or api_key.strip() == "" or api_key.strip().lower() == "your_openrouter_api_key_here":
+        raise RuntimeError("OPENROUTER_API_KEY is not configured. Add a real key to the project .env file.")
 
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -145,14 +145,29 @@ def call_board_ai(board: Dict[str, Any], question: str, history: Optional[List[D
     if history:
         messages.extend(history)
     messages.append({"role": "user", "content": f"User request: {question}\n\nBoard JSON:\n{board_json}"})
-    response_text = call_openrouter(
-        prompt=question,
-        max_tokens=max_tokens,
-        response_format=JSON_RESPONSE_FORMAT,
-        messages=messages,
-        system_prompt=None,
-    )
-    parsed = _extract_json_from_response(response_text)
+
+    try:
+        response_text = call_openrouter(
+            prompt=question,
+            max_tokens=max_tokens,
+            response_format=JSON_RESPONSE_FORMAT,
+            messages=messages,
+            system_prompt=None,
+        )
+    except Exception:
+        return {
+            "response": "AI is unavailable because OPENROUTER_API_KEY is not configured. Add a real key to the project .env file and restart the app.",
+            "board_update": None,
+        }
+
+    try:
+        parsed = _extract_json_from_response(response_text)
+    except Exception:
+        return {
+            "response": "I couldn't parse the AI response right now.",
+            "board_update": None,
+        }
+
     if not isinstance(parsed, dict):
         raise ValueError("OpenRouter response was not a JSON object")
     if "response" not in parsed:

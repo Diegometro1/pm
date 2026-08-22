@@ -36,4 +36,7 @@ describe("login flow", () => {
         fireEvent.click(logoutButton);
         expect(await screen.findByRole("heading", { name: /sign in/i })).toBeInTheDocument();
     });
-});
+});cd frontend
+npm run test:unit -- src/app/page.test.tsxcd frontend
+npm run test:unit -- src/app/page.test.tsxcd frontend
+npm run test:unit -- src/app/page.test.tsx

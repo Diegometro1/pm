@@ -120,12 +120,13 @@ export const KanbanBoard = ({ onLogout }: KanbanBoardProps) => {
 
       setAiMessages((prev) => [...prev, { role: "assistant", content: result.response || "I updated the board." }]);
 
-      if (result.board_update) {
+      const nextBoard = result.board_update;
+      if (nextBoard && typeof nextBoard === "object") {
         setBoard((prev) => ({
           ...prev,
-          ...result.board_update,
-          columns: result.board_update.columns ?? prev.columns,
-          cards: result.board_update.cards ?? prev.cards,
+          ...nextBoard,
+          columns: nextBoard.columns ?? prev.columns,
+          cards: nextBoard.cards ?? prev.cards,
         }));
       }
     } catch (error) {
@@ -290,8 +291,8 @@ export const KanbanBoard = ({ onLogout }: KanbanBoardProps) => {
               <div
                 key={`${message.role}-${index}`}
                 className={`rounded-2xl border px-3 py-2 text-sm leading-6 ${message.role === "user"
-                    ? "border-[var(--primary-blue)] bg-[var(--surface)] text-[var(--navy-dark)]"
-                    : "border-[var(--stroke)] bg-[var(--surface-strong)] text-[var(--navy-dark)]"
+                  ? "border-[var(--primary-blue)] bg-[var(--surface)] text-[var(--navy-dark)]"
+                  : "border-[var(--stroke)] bg-[var(--surface-strong)] text-[var(--navy-dark)]"
                   }`}
               >
                 {message.content}

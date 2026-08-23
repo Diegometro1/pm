@@ -57,7 +57,7 @@ jobs:
       - name: Run frontend unit + integration tests (Vitest)
         run: |
           cd frontend
-          TEST_BASE=http://127.0.0.1:8000 npx vitest -c ../vitest.config.ts --run
+          TEST_BASE=http://127.0.0.1:8000 npx vitest --run
 
       - name: Install Playwright browsers
         run: |

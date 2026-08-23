@@ -1,11 +1,22 @@
 import type { Locator, Page } from "@playwright/test";
 
+const POINTER_ID = 1;
+
 /**
- * Drags `source` onto `target` via low-level mouse events. Uses a high
- * step count on the move so dnd-kit's PointerSensor sees enough
- * intermediate pointermove events to activate reliably (its
- * activationConstraint requires movement past 6px, see KanbanBoard.tsx)
- * even under CI's more constrained/slower event loop.
+ * Drags `source` onto `target` by dispatching a synthetic PointerEvent
+ * sequence directly, rather than Playwright's CDP-level page.mouse.*
+ * API. Attempt at fixing #2: CI's headless Chromium never activates
+ * dnd-kit's PointerSensor via page.mouse.*, even with a high move step
+ * count (ruled out separately, see the issue) -- this instead sets the
+ * pointerId/pointerType/isPrimary/buttons fields the sensor reads
+ * directly, in case CDP-synthesized events don't carry them the same
+ * way a real OS pointer does in headless mode.
+ *
+ * pointerdown is dispatched on `source` itself, matching where
+ * dnd-kit's listeners attach (KanbanCard.tsx spreads them directly
+ * onto the card element). pointermove/pointerup are dispatched on
+ * `body` because dnd-kit's sensor tracks them via document-level
+ * listeners once a drag starts, not the original target.
  */
 export async function dragTo(
   page: Page,
@@ -24,8 +35,39 @@ export async function dragTo(
   const endX = targetBox.x + targetBox.width / 2;
   const endY = targetBox.y + targetOffsetY;
 
-  await page.mouse.move(startX, startY);
-  await page.mouse.down();
-  await page.mouse.move(endX, endY, { steps: 30 });
-  await page.mouse.up();
+  const base = {
+    pointerId: POINTER_ID,
+    pointerType: "mouse",
+    isPrimary: true,
+    bubbles: true,
+    cancelable: true,
+  };
+
+  await source.dispatchEvent("pointerdown", {
+    ...base,
+    button: 0,
+    buttons: 1,
+    clientX: startX,
+    clientY: startY,
+  });
+
+  const steps = 20;
+  for (let i = 1; i <= steps; i++) {
+    const x = startX + ((endX - startX) * i) / steps;
+    const y = startY + ((endY - startY) * i) / steps;
+    await page.dispatchEvent("body", "pointermove", {
+      ...base,
+      buttons: 1,
+      clientX: x,
+      clientY: y,
+    });
+  }
+
+  await page.dispatchEvent("body", "pointerup", {
+    ...base,
+    button: 0,
+    buttons: 0,
+    clientX: endX,
+    clientY: endY,
+  });
 }

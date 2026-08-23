@@ -3,6 +3,9 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./tests",
   timeout: 60_000,
+  // Specs share one backend-seeded board (card-1, col-review) with no
+  // per-test isolation, so parallel workers race each other mutating it.
+  workers: 1,
   expect: {
     timeout: 10_000,
   },

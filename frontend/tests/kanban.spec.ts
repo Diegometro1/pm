@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { dragTo } from "./drag-helper";
 
 const login = async (page: import("@playwright/test").Page) => {
   await page.goto("/");
@@ -30,22 +31,7 @@ test("moves a card between columns", async ({ page }) => {
   await login(page);
   const card = page.getByTestId("card-card-1");
   const targetColumn = page.getByTestId("column-col-review");
-  const cardBox = await card.boundingBox();
-  const columnBox = await targetColumn.boundingBox();
-  if (!cardBox || !columnBox) {
-    throw new Error("Unable to resolve drag coordinates.");
-  }
 
-  await page.mouse.move(
-    cardBox.x + cardBox.width / 2,
-    cardBox.y + cardBox.height / 2
-  );
-  await page.mouse.down();
-  await page.mouse.move(
-    columnBox.x + columnBox.width / 2,
-    columnBox.y + 120,
-    { steps: 12 }
-  );
-  await page.mouse.up();
+  await dragTo(page, card, targetColumn);
   await expect(targetColumn.getByTestId("card-card-1")).toBeVisible();
 });

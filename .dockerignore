@@ -1,0 +1,17 @@
+.git
+.venv
+data
+welcome-to-docker
+.env
+.env.*
+*.log
+
+frontend/node_modules
+frontend/.next
+frontend/out
+frontend/test-results
+frontend/coverage
+
+backend/__pycache__
+**/__pycache__
+.pytest_cache

@@ -28,6 +28,7 @@ export const KanbanBoard = ({ onLogout }: KanbanBoardProps) => {
     { role: "assistant", content: "Ask me to add, move, or rename cards on the board." },
   ]);
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [saveError, setSaveError] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -123,8 +124,6 @@ export const KanbanBoard = ({ onLogout }: KanbanBoardProps) => {
       const nextBoard = result.board_update;
       if (nextBoard && typeof nextBoard === "object") {
         setBoard((prev) => ({
-          ...prev,
-          ...nextBoard,
           columns: nextBoard.columns ?? prev.columns,
           cards: nextBoard.cards ?? prev.cards,
         }));
@@ -180,8 +179,9 @@ export const KanbanBoard = ({ onLogout }: KanbanBoardProps) => {
       };
       try {
         await saveBoard(payload);
+        setSaveError(false);
       } catch (e) {
-        // ignore save errors
+        setSaveError(true);
       }
     }, 500);
 
@@ -244,6 +244,12 @@ export const KanbanBoard = ({ onLogout }: KanbanBoardProps) => {
                 </div>
               ))}
             </div>
+
+            {saveError ? (
+              <p className="text-sm font-semibold text-red-600">
+                Couldn&apos;t save your latest changes. Check your connection — your edits are still visible here but may not persist.
+              </p>
+            ) : null}
           </header>
 
           <DndContext

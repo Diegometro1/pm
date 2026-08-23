@@ -7,7 +7,7 @@ services:
       args:
         BACKEND_URL: http://backend:8000
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
       - NODE_ENV=production
     depends_on:
@@ -26,7 +26,7 @@ services:
       dockerfile: Dockerfile
       target: builder
     ports:
-      - "3001:3000"
+      - "127.0.0.1:3001:3000"
     environment:
       - NODE_ENV=development
     volumes:
@@ -48,7 +48,7 @@ services:
       target: base
     image: pm-backend:latest
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     volumes:
       - ./data:/app/data
     restart: unless-stopped

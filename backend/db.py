@@ -1,5 +1,6 @@
 import sqlite3
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -39,14 +40,20 @@ def get_board(db_path: Path, user_id: str) -> Optional[dict]:
 
 
 def save_board(db_path: Path, user_id: str, board: dict):
-    now = board.get("meta", {}).get("updated_at") or ""
-    data = json.dumps(board)
+    now = datetime.now(timezone.utc).isoformat()
     conn = _connect(db_path)
+    cur = conn.execute("SELECT created_at FROM boards WHERE user_id = ?", (user_id,))
+    existing = cur.fetchone()
+    created_at = existing["created_at"] if existing and existing["created_at"] else now
+
+    board = {**board, "meta": {**board.get("meta", {}), "created_at": created_at, "updated_at": now}}
+    data = json.dumps(board)
+
     # upsert
     conn.execute(
         "INSERT INTO boards (id, user_id, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?)"
         " ON CONFLICT(user_id) DO UPDATE SET data=excluded.data, updated_at=excluded.updated_at",
-        (board.get("id", user_id), user_id, data, now, now),
+        (board.get("id", user_id), user_id, data, created_at, now),
     )
     conn.commit()
     conn.close()

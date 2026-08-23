@@ -17,6 +17,8 @@ For the MVP, there will only be 1 Kanban board per signed in user.
 
 For the MVP, this will run locally (in a docker container)
 
+The login is client-side only (a `localStorage` flag) with no server-side session or auth check. The backend API (`/api/board`, `/api/ai/board`) accepts requests from anyone who can reach it, no credentials required. Compose binds all ports to `127.0.0.1` to keep that reachable only from the local machine; this is not sufficient if the app is ever exposed beyond localhost.
+
 ## Technical Decisions
 
 - NextJS frontend

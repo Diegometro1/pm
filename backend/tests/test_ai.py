@@ -96,6 +96,7 @@ def _has_real_openrouter_key() -> bool:
     return bool(value and value.strip() and value.strip().lower() != "your_openrouter_api_key_here")
 
 
+@pytest.mark.integration
 @pytest.mark.skipif(not _has_real_openrouter_key(), reason="No real OPENROUTER_API_KEY configured")
 def test_call_openrouter_integration():
     resp = ai.call_openrouter("What is 2+2?", max_tokens=10)
@@ -104,6 +105,7 @@ def test_call_openrouter_integration():
     assert "4" in resp or "four" in resp.lower()
 
 
+@pytest.mark.integration
 @pytest.mark.skipif(not _has_real_openrouter_key(), reason="No real OPENROUTER_API_KEY configured")
 def test_call_board_ai_integration():
     board = {

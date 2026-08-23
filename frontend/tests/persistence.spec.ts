@@ -26,6 +26,11 @@ test("moves a card and persists across reload", async ({ page }) => {
     // wait for move to be visible in UI
     await expect(target.getByTestId("card-card-1")).toBeVisible();
 
+    // wait for the debounced auto-save to reach the backend before reloading
+    await page.waitForResponse(
+        (res) => res.url().includes("/api/board") && res.request().method() === "PUT"
+    );
+
     // reload and verify the card remains in the same column (persistence)
     await page.reload();
     await expect(target.getByTestId("card-card-1")).toBeVisible();

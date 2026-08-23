@@ -4,15 +4,19 @@ services:
       context: .
       dockerfile: Dockerfile
       target: runner
+      args:
+        BACKEND_URL: http://backend:8000
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
+    depends_on:
+      - backend
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"]
       interval: 30s
-      timeout: 3s
+      timeout: 10s
       retries: 3
       start_period: 40s
 
@@ -45,6 +49,8 @@ services:
     image: pm-backend:latest
     ports:
       - "8000:8000"
+    volumes:
+      - ./data:/app/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/ping"]

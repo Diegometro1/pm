@@ -7,6 +7,8 @@ RUN npm ci --only=production
 # Stage 2: Builder
 FROM node:20-alpine AS builder
 WORKDIR /app
+ARG BACKEND_URL=http://127.0.0.1:8000
+ENV BACKEND_URL=$BACKEND_URL
 COPY frontend/package*.json ./
 RUN npm ci
 COPY frontend/ .
@@ -28,7 +30,7 @@ COPY --from=builder /app/package*.json ./
 
 USER nextjs
 EXPOSE 3000
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
 
 CMD ["npm", "start"]

@@ -71,7 +71,7 @@
                     "title": {
                         "type": "string"
                     },
-                    "description": {
+                    "details": {
                         "type": "string"
                     },
                     "labels": {
